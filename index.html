@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MedLink — Smart Medicine Tracker</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+
+  <style>
+    :root {
+      --clinical-blue: #2563eb;
+      --muted-blue: #e6f0ff;
+      --soft-green: #10b981;
+      --card-shadow: 0 8px 24px rgba(16, 24, 40, 0.08);
+      --glass: rgba(255, 255, 255, 0.7);
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: linear-gradient(180deg, #f8fbff 0%, #f3f7ff 100%);
+      color: #0f172a;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    /* ----- CARD STYLING ----- */
+    .card {
+      background: var(--glass);
+      backdrop-filter: blur(8px);
+      border-radius: 14px;
+      box-shadow: var(--card-shadow);
+      border: 1px solid rgba(99, 102, 241, 0.08);
+      transition: all 0.25s ease-in-out;
+    }
+
+    .card:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(37, 99, 235, 0.12); }
+
+    .muted { color: #6b7280; }
+    .muted-2 { color: #94a3b8; }
+
+    .form-input, .form-select, .input-field {
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      background: #fff;
+      transition: all 0.25s;
+      box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+    }
+
+    .form-input:focus, .form-select:focus, .input-field:focus {
+      border-color: var(--clinical-blue);
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+      outline: none;
+    }
+
+    .medicine-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); gap:1.25rem; }
+
+    .header { backdrop-filter: blur(6px); }
+
+    #loading-view .spinner { border: 4px solid #e5e7eb; border-top-color: var(--clinical-blue); border-radius: 50%; width:48px; height:48px; }
+
+    .summary-list { display:flex; flex-direction:column; gap:0.5rem; max-height:170px; overflow-y:auto; padding-right:0.25rem; scrollbar-width:thin; }
+    .summary-list::-webkit-scrollbar { width:6px; }
+    .summary-list::-webkit-scrollbar-thumb { background-color: rgba(37,99,235,0.25); border-radius:10px; }
+
+    .summary-item { display:flex; justify-content:space-between; align-items:center; gap:0.5rem; padding:0.6rem 0.75rem; border-radius:10px; background:#f9fafb; transition:all .25s; }
+    .summary-item:hover { background:#eef3ff; }
+    .summary-item.expired { background: rgba(254,226,226,0.95); }
+    .summary-item .meta { font-size:0.85rem; color:#6b7280; }
+
+    .gemini-modal, #reminder-modal { background: rgba(2,6,23,0.55); backdrop-filter: blur(8px); }
+
+    body.dark-mode { background: linear-gradient(180deg,#0a1224 0%,#071827 100%); color:#e6eef8; }
+    body.dark-mode .card { background: rgba(17,24,39,0.9); border:1px solid rgba(255,255,255,0.08); }
+    body.dark-mode .muted { color:#9aa9c7; } body.dark-mode .muted-2 { color:#7e8fa6; }
+    body.dark-mode .form-input, body.dark-mode .form-select, body.dark-mode .input-field { background:#0f172a; color:#e8f0ff; border:1px solid rgba(255,255,255,0.08); box-shadow:none; }
+    body.dark-mode .summary-item { background: rgba(17,24,39,0.8); } body.dark-mode .summary-item:hover { background: rgba(37,99,235,0.1); }
+
+    :focus { outline: 2px solid rgba(37, 99, 235, 0.25); outline-offset:2px; }
+    button, input, select, textarea { transition: all .25s ease; }
+    button:hover { transform: translateY(-1px); }
+
+    @media (max-width:640px){
+      nav { flex-wrap:wrap; justify-content:center; }
+      nav button { font-size:.85rem; padding:.45rem .7rem; }
+      .header .card { flex-direction:column; gap:.75rem; text-align:center; }
+    }
+    @media (min-width:768px){ .header { padding-left:2rem; padding-right:2rem; } }
+
+    .animate-spin { animation: spin 1s linear infinite; }
+    @keyframes spin { from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
+
+    /* modal content */
+    .modal-content { max-width:720px; width:100%; border-radius:12px; }
+  </style>
+</head>
+<body class="min-h-screen">
+
+  <!-- Loading -->
+  <div id="loading-view" class="min-h-screen flex items-center justify-center p-6">
+    <div class="flex flex-col items-center gap-4">
+      <div class="spinner animate-spin"></div>
+      <p class="muted">Starting MedLink...</p>
+    </div>
+  </div>
+
+  <!-- AUTH VIEW -->
+  <div id="auth-view" class="min-h-screen flex items-center justify-center p-6 hidden">
+    <div class="card max-w-md w-full p-8">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 id="auth-title" class="text-2xl font-extrabold" style="color:var(--clinical-blue)">Sign In</h2>
+          <p class="text-sm muted">Access your MedLink account</p>
+        </div>
+        <div class="text-xl">💊</div>
+      </div>
+
+      <form id="auth-form" onsubmit="event.preventDefault(); handleSubmit();" class="space-y-4">
+        <div id="registration-fields" class="transition-all max-h-0 overflow-hidden opacity-0">
+          <label class="text-xs font-medium muted">Username</label>
+          <input id="username" class="form-input w-full mt-1 p-3" maxlength="20" placeholder="Choose a username (for sign up)">
+        </div>
+
+        <div>
+          <label class="text-xs font-medium muted">Email</label>
+          <input id="email" type="email" required class="form-input w-full mt-1 p-3" placeholder="you@example.com">
+        </div>
+
+        <div>
+          <label class="text-xs font-medium muted">Password</label>
+          <input id="password" type="password" required class="form-input w-full mt-1 p-3" placeholder="At least 6 characters">
+        </div>
+
+        <p id="auth-error" class="text-sm text-red-500 hidden"></p>
+
+        <div class="pt-3">
+          <button id="submit-button" type="submit" class="w-full" style="background:var(--clinical-blue); color:white; font-weight:600; padding:.75rem 1rem; border-radius: .5rem;">
+            Sign In
+          </button>
+        </div>
+
+        <p class="text-center text-sm muted mt-2">
+          Don't have an account?
+          <a href="#" id="toggle-auth" onclick="event.preventDefault(); toggleAuthMode();" style="color:var(--clinical-blue); font-weight:600; text-decoration:none;"> Sign Up</a>
+        </p>
+      </form>
+    </div>
+  </div>
+
+  <!-- APP VIEW -->
+  <div id="app-view" class="hidden min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="header sticky top-4 z-30 mx-auto w-full max-w-7xl px-4">
+      <div class="flex items-center justify-between gap-6 card p-4">
+        <div class="flex items-center gap-4">
+          <div class="rounded-md bg-white p-2 shadow-inner hidden sm:flex items-center justify-center" style="border-radius:10px">
+            <span class="text-2xl">💊</span>
+          </div>
+          <div>
+            <h1 class="text-lg font-extrabold" style="color:var(--clinical-blue)">MedLink</h1>
+            <p class="text-xs muted">Smart Medicine Tracker</p>
+          </div>
+        </div>
+
+        <nav class="flex items-center gap-3">
+          <button onclick="scrollToSection('dashboard-view')" class="px-3 py-2 rounded-md text-sm font-medium muted hover:text-[--clinical-blue]">📋 Dashboard</button>
+          <button onclick="scrollToSection('add-medicine-view')" class="px-3 py-2 rounded-md text-sm font-medium muted hover:text-[--clinical-blue]">＋ Add</button>
+          <button onclick="scrollToSection('settings-view')" class="px-3 py-2 rounded-md text-sm font-medium muted hover:text-[--clinical-blue]">⚙ Settings</button>
+          <button id="darkModeToggle" aria-label="Toggle dark mode" class="px-3 py-2 rounded-md text-sm font-medium muted hover:bg-gray-50">☀</button>
+          <button onclick="signOut()" class="px-3 py-2 rounded-md text-sm font-medium text-red-500 hover:bg-red-50">🚪 Sign Out</button>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main-content" class="flex-1 max-w-7xl mx-auto p-6">
+      <!-- Dashboard -->
+      <section id="dashboard-view" class="page-view">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+          <div>
+            <h2 class="text-2xl font-extrabold" style="color:var(--clinical-blue)">Medicine Dashboard</h2>
+            <p class="muted">Overview of your medicines, stock levels and upcoming reminders.</p>
+          </div>
+
+          <div class="flex flex-col sm:flex-row gap-3 items-stretch">
+            <div class="relative">
+              <span class="absolute left-3 top-3 text-gray-400">🔎</span>
+              <input id="search-input" oninput="renderDashboard()" placeholder="Search medicine by name..." class="input-field pl-11 pr-4 py-3 w-72 form-input">
+            </div>
+
+            <div class="flex items-center gap-3">
+              <div class="card px-4 py-3 text-sm">
+                Total <div id="stat-total" class="font-bold text-lg">0</div>
+              </div>
+              <div class="card px-4 py-3 text-sm">
+                Urgent <div id="stat-urgent" class="font-bold text-lg">0</div>
+              </div>
+
+              <button id="summary-button" onclick="generateHealthSummary()" class="bg-[--soft-green] text-white px-4 py-2 rounded-lg font-semibold hover:brightness-95 disabled:opacity-60">
+                ✨ Health Summary
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stock & Expiry Summary Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <!-- Low Stock Card -->
+          <div class="card p-4">
+            <div class="flex items-center justify-between mb-3">
+              <div>
+                <h3 class="text-lg font-bold">Low Stock</h3>
+                <p class="muted text-sm">Medicines below the stock threshold</p>
+              </div>
+              <div class="text-sm muted">Threshold: <strong id="low-stock-threshold-text">5</strong></div>
+            </div>
+            <div id="low-stock-list" class="summary-list">
+              <!-- Items dynamic -->
+            </div>
+            <div class="pt-3 text-right">
+              <button onclick="focusLowStock()" class="text-sm muted hover:underline">View all</button>
+            </div>
+          </div>
+
+          <!-- Expiring Soon Card -->
+          <div class="card p-4">
+            <div class="flex items-center justify-between mb-3">
+              <div>
+                <h3 class="text-lg font-bold">Expiring Soon</h3>
+                <p class="muted text-sm">Medicines expiring within next <span id="expiry-warning-days-text">30</span> days</p>
+              </div>
+              <div class="text-sm muted">Today: <strong id="today-date-text"></strong></div>
+            </div>
+            <div id="expiring-soon-list" class="summary-list">
+              <!-- Items dynamic -->
+            </div>
+            <div class="pt-3 text-right">
+              <button onclick="focusExpiring()" class="text-sm muted hover:underline">View all</button>
+            </div>
+          </div>
+        </div>
+
+        <section id="landing-view" class="page-view active min-h-[60vh] grid place-items-center">
+          <div class="card p-10 max-w-xl w-full text-center">
+            <div class="text-6xl mb-4">💊</div>
+            <h2 class="text-2xl font-extrabold" style="color:var(--clinical-blue)">Welcome to MedLink</h2>
+            <p class="muted mb-6">Your calm, secure companion for tracking medicines — stock, dosing and reminders.</p>
+            <button onclick="scrollToSection('add-medicine-view')" class="bg-[--clinical-blue] text-white px-6 py-3 rounded-full font-semibold hover:bg-blue-700 transition">Add First Medicine</button>
+          </div>
+        </section>
+
+        <div id="summary-loading" class="hidden mb-4 text-sm rounded-lg p-3 bg-green-50 text-green-700">
+          <span class="animate-spin inline-block h-4 w-4 border-2 border-green-600 border-t-transparent rounded-full mr-2"></span> Generating summary...
+        </div>
+
+        <div id="medicine-list" class="medicine-grid">
+          <p id="no-meds-message" class="col-span-full text-center text-xl muted p-8 hidden">No medicines match your search. Try adding a new one!</p>
+        </div>
+      </section>
+
+      <!-- Add / Edit Medicine -->
+      <section id="add-medicine-view" class="page-view max-w-3xl mx-auto mt-8">
+        <h2 id="form-title" class="text-2xl font-extrabold" style="color:var(--clinical-blue)">Add New Medicine</h2>
+        <div class="card p-6">
+          <form id="medicine-form" onsubmit="event.preventDefault(); saveMedicine();" class="space-y-4">
+            <input type="hidden" id="medicine-id">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="text-xs font-medium muted">Medicine Name <span class="text-red-500">*</span></label>
+                <input id="name" required class="input-field form-input w-full mt-1 p-3" placeholder="e.g., PainRelief Tabs">
+              </div>
+
+              <div>
+                <label class="text-xs font-medium muted">Dosage (mg/mL) <span class="text-red-500">*</span></label>
+                <input id="dosage" required class="input-field form-input w-full mt-1 p-3" placeholder="e.g., 500mg">
+              </div>
+
+              <!-- Dose time selection (Morning/Noon/Night/Custom) -->
+              <div>
+                <label class="text-xs font-medium muted">Dose Time <span class="text-red-500">*</span></label>
+                <select id="dose-time-select" required class="input-field form-select w-full mt-1 p-3">
+                  <option value="" disabled selected>Select Dose Time</option>
+                  <option value="08:00">Morning (08:00)</option>
+                  <option value="13:00">Noon (13:00)</option>
+                  <option value="20:00">Night (20:00)</option>
+                  <option value="custom">Custom</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="text-xs font-medium muted">Custom Time</label>
+                <input type="time" id="schedule-time" disabled class="input-field form-input w-full mt-1 p-3">
+              </div>
+
+              <!-- Schedule (Today / Daily) -->
+              <div>
+                <label class="text-xs font-medium muted">Schedule <span class="text-red-500">*</span></label>
+                <select id="schedule-type" required class="input-field form-select w-full mt-1 p-3">
+                  <option value="" disabled selected>Select Schedule</option>
+                  <option value="today">Today Only</option>
+                  <option value="daily">Daily</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="text-xs font-medium muted">Quantity in Stock <span class="text-red-500">*</span></label>
+                <input id="stock" type="number" required min="0" class="input-field form-input w-full mt-1 p-3" placeholder="e.g., 15">
+              </div>
+
+              <div>
+                <label class="text-xs font-medium muted">Dose Amount <span class="text-red-500">*</span></label>
+                <input id="dose-amount" type="number" required min="1" value="1" class="input-field form-input w-full mt-1 p-3">
+              </div>
+
+              <div class="md:col-span-2">
+                <label class="text-xs font-medium muted">Expiry Date <span class="text-red-500">*</span></label>
+                <input id="expiry-date" type="date" required class="input-field form-input w-full mt-1 p-3">
+              </div>
+
+              <div class="md:col-span-2">
+                <div class="flex items-center justify-between mb-1">
+                  <label class="text-xs font-medium muted">Purpose / Notes</label>
+                  <!-- GET DETAILS BUTTON REMOVED AS REQUESTED -->
+                </div>
+                <textarea id="purpose" rows="2" class="input-field form-input w-full mt-1 p-3" placeholder="e.g., For headache relief, take after food."></textarea>
+                <p id="purpose-loading" class="text-xs" style="color:var(--clinical-blue); margin-top:.25rem; display:none;">Loading common use and warnings...</p>
+              </div>
+
+              <!-- Doctor's prescription (multi-line bullets stored) -->
+              <div class="md:col-span-2">
+                <label class="text-xs font-medium muted">Doctor's Prescription (each line becomes a bullet)</label>
+                <textarea id="prescription" rows="3" class="input-field form-input w-full mt-1 p-3" placeholder="e.g., Take after meals\nAvoid alcohol"></textarea>
+                <p class="text-xs muted-2 mt-1">Enter each prescription line on a new line; they'll appear as bullets in the summary.</p>
+              </div>
+
+            </div>
+
+            <div class="flex justify-end gap-3">
+              <button type="button" onclick="cancelAddEdit()" class="px-5 py-2 rounded-lg" style="background:#f3f4f6; color:#374151;">Cancel</button>
+              <button id="save-button" type="submit" class="px-6 py-2 rounded-lg" style="background:var(--soft-green); color:white; font-weight:600;">Save Medicine</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- Settings -->
+      <section id="settings-view" class="page-view max-w-3xl mx-auto mt-8">
+        <h2 class="text-2xl font-extrabold" style="color:var(--clinical-blue)">App Settings</h2>
+        <div class="card p-6">
+          <h3 class="font-bold mb-1">Reminder Notifications</h3>
+          <p class="muted mb-4 text-sm">Choose how MedLink sends dose reminders</p>
+
+          <div class="space-y-3">
+            <div class="flex items-center gap-3">
+              <input id="notify-modal" type="radio" name="notification-type" value="modal" checked>
+              <label for="notify-modal" class="muted">In-App Modal (when app is visible)</label>
+            </div>
+            <div class="flex items-center gap-3">
+              <input id="notify-browser" type="radio" name="notification-type" value="browser">
+              <label for="notify-browser" class="muted">Browser / System Notifications (requires permission)</label>
+            </div>
+
+            <div class="mt-3">
+              <button id="permission-button" onclick="requestNotificationPermission()" class="px-4 py-2" style="background:var(--soft-green); color:white; border-radius:8px;">Request Browser Permission</button>
+              <p id="permission-status" class="mt-2 muted text-sm"></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Reminder Modal (in-app) -->
+      <div id="reminder-modal" class="fixed inset-0 hidden items-center justify-center p-4 z-50">
+        <div class="reminder-modal-content card p-6 max-w-md w-full border-0 transform transition scale-100">
+          <h3 class="text-xl font-bold" style="color:var(--clinical-blue); display:flex; gap:.5rem; align-items:center;">
+            <span style="color:#f59e0b">🔔</span> Dosing Reminder
+          </h3>
+          <p id="reminder-name" class="text-2xl font-semibold mt-2"></p>
+          <p id="reminder-details" class="mt-1 muted"></p>
+          <p id="reminder-purpose" class="mt-2 italic muted-2"></p>
+
+          <div class="flex justify-between items-start gap-3 mt-4">
+            <div>
+              <button onclick="snoozeReminder()" class="px-4 py-2" style="background:#f3f4f6; border-radius:8px;">Snooze</button>
+              <button onclick="stopAlarm()" class="px-4 py-2 ml-2" style="background:#ef4444; color:white; border-radius:8px;">Stop Alarm</button>
+            </div>
+            <div>
+              <button onclick="takeDoseFromReminder(activeReminder && activeReminder.id)" class="px-4 py-2" style="background:var(--clinical-blue); color:white; border-radius:8px;">I Took It</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Generic Modal (for messages and confirmations) -->
+      <div id="generic-modal" class="fixed inset-0 hidden items-center justify-center p-6 z-60">
+        <div id="generic-modal-content" class="card modal-content p-6 relative">
+          <button onclick="closeModal()" class="absolute top-4 right-4 text-muted" style="background:transparent; border:none; font-size:18px;">✕</button>
+          <h3 id="generic-modal-title" class="text-lg font-bold" style="color:var(--clinical-blue); margin-bottom:.5rem;">Message</h3>
+          <div id="generic-modal-body" class="text-sm muted max-h-80 overflow-auto whitespace-pre-wrap"></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Audio: short ping + loud looping alarm -->
+  <audio id="notification-sound" preload="auto">
+    <!-- tiny ping wav (very short) -->
+    <source src="https://audio-previews.elements.envatousercontent.com/files/472198703/preview.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- Using envato preview (replace with local file if you prefer) -->
+  <audio id="alarm-sound" preload="auto" loop>
+    <source src="https://audio-previews.elements.envatousercontent.com/files/228185949/preview.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- SCRIPT -->
+  <script src="script.js"></script>
+</body>
+</html>
