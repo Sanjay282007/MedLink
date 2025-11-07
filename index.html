@@ -99,6 +99,19 @@
 
     /* modal content */
     .modal-content { max-width:720px; width:100%; border-radius:12px; }
+/* Navbar responsiveness */
+#mobileMenu {
+  display: none;
+}
+@media (max-width: 768px) {
+  #mobileMenu.show {
+    display: flex;
+    position: absolute;
+    top: 70px;
+    right: 1rem;
+  }
+}
+
   </style>
 </head>
 <body class="min-h-screen">
@@ -157,27 +170,37 @@
   <!-- APP VIEW -->
   <div id="app-view" class="hidden min-h-screen flex flex-col">
     <!-- Header -->
-    <header class="header sticky top-4 z-30 mx-auto w-full max-w-7xl px-4">
-      <div class="flex items-center justify-between gap-6 card p-4">
-        <div class="flex items-center gap-4">
-          <div class="rounded-md bg-white p-2 shadow-inner hidden sm:flex items-center justify-center" style="border-radius:10px">
-            <span class="text-2xl">💊</span>
-          </div>
-          <div>
-            <h1 class="text-lg font-extrabold" style="color:var(--clinical-blue)">MedLink</h1>
-            <p class="text-xs muted">Smart Medicine Tracker</p>
-          </div>
-        </div>
+<!-- Header / Navigation Bar -->
+<header class="card mx-4 my-2">
+  <div class="flex items-center justify-between p-4">
+    <div class="flex items-center gap-3">
+      <span class="text-2xl">💊</span>
+      <h1 class="font-extrabold text-lg" style="color:var(--clinical-blue)">MedLink</h1>
+    </div>
 
-        <nav class="flex items-center gap-3">
-          <button onclick="scrollToSection('dashboard-view')" class="px-3 py-2 rounded-md text-sm font-medium muted hover:text-[--clinical-blue]">📋 Dashboard</button>
-          <button onclick="scrollToSection('add-medicine-view')" class="px-3 py-2 rounded-md text-sm font-medium muted hover:text-[--clinical-blue]">＋ Add</button>
-          <button onclick="scrollToSection('settings-view')" class="px-3 py-2 rounded-md text-sm font-medium muted hover:text-[--clinical-blue]">⚙ Settings</button>
-          <button id="darkModeToggle" aria-label="Toggle dark mode" class="px-3 py-2 rounded-md text-sm font-medium muted hover:bg-gray-50">☀</button>
-          <button onclick="signOut()" class="px-3 py-2 rounded-md text-sm font-medium text-red-500 hover:bg-red-50">🚪 Sign Out</button>
-        </nav>
-      </div>
-    </header>
+    <!-- Desktop Navbar -->
+    <nav class="hidden md:flex items-center gap-4">
+      <button onclick="scrollToSection('dashboard-view')">📋 Dashboard</button>
+      <button onclick="scrollToSection('add-medicine-view')">＋ Add</button>
+      <button onclick="scrollToSection('settings-view')">⚙ Settings</button>
+      <button id="darkModeToggle" onclick="toggleDarkMode()">🌙</button>
+      <button onclick="signOut()" style="color:red;">🚪 Sign Out</button>
+    </nav>
+
+    <!-- Hamburger Menu (visible only on mobile) -->
+    <button id="menu-btn" class="md:hidden text-2xl" style="color:var(--clinical-blue); background:none; border:none;">☰</button>
+  </div>
+
+  <!-- Mobile Dropdown Menu -->
+  <div id="mobileMenu" class="hidden flex-col absolute right-4 mt-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 w-48 z-50">
+    <button onclick="scrollToSection('dashboard-view'); toggleMenu()" class="text-left py-1 px-2 w-full hover:bg-blue-50 dark:hover:bg-gray-800 rounded">📋 Dashboard</button>
+    <button onclick="scrollToSection('add-medicine-view'); toggleMenu()" class="text-left py-1 px-2 w-full hover:bg-blue-50 dark:hover:bg-gray-800 rounded">＋ Add</button>
+    <button onclick="scrollToSection('settings-view'); toggleMenu()" class="text-left py-1 px-2 w-full hover:bg-blue-50 dark:hover:bg-gray-800 rounded">⚙ Settings</button>
+    <button onclick="toggleDarkMode(); toggleMenu()" class="text-left py-1 px-2 w-full hover:bg-blue-50 dark:hover:bg-gray-800 rounded">🌙 Dark Mode</button>
+    <button onclick="signOut(); toggleMenu()" class="text-left py-1 px-2 w-full text-red-600 hover:bg-red-50 dark:hover:bg-gray-800 rounded">🚪 Sign Out</button>
+  </div>
+</header>
+
 
     <main id="main-content" class="flex-1 max-w-7xl mx-auto p-6">
       <!-- Dashboard -->
@@ -420,6 +443,6 @@
   </audio>
 
   <!-- SCRIPT -->
-  <script src="script.js"></script>
+  <script src="style.css"> </script>
 </body>
 </html>

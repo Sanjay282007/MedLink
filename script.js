@@ -936,3 +936,12 @@ window.downloadSummary = function(){
 
     // watch for storage changes (multi-tab)
     window.addEventListener('storage', () => { loadMedicines(); renderDashboard(); renderSummaryCards(); });
+
+// --- Responsive Menu Toggle ---
+const menuBtn = document.getElementById("menu-btn");
+const mobileMenu = document.getElementById("mobileMenu");
+
+function toggleMenu() {
+  mobileMenu.classList.toggle("show");
+}
+menuBtn.addEventListener("click", toggleMenu);
