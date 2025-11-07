@@ -22,7 +22,7 @@
     let lastGeneratedSummaryText = '';
 
     // DOM refs
-    const loadingView = document.getElementById('loading-view');
+    const loadingView = document.getElementById('loading-view'); // may be null (loading removed)
     const authView = document.getElementById('auth-view');
     const appView = document.getElementById('app-view');
 
@@ -166,7 +166,7 @@
 
     // View management
     const showMainView = (viewId) => {
-      loadingView.classList.add('hidden');
+      if (loadingView) loadingView.classList.add('hidden');
       authView.classList.add('hidden');
       appView.classList.add('hidden');
 
@@ -178,7 +178,9 @@
     };
 
     window.changeView = (viewId, medicineData = null) => {
-      Object.keys(views).forEach(k => views[k].classList.remove('active'));
+      Object.keys(views).forEach(k => {
+        if (views[k]) views[k].classList.remove('active');
+      });
       if (views[viewId]) views[viewId].classList.add('active');
 
       if (viewId === 'add-medicine') prepareForm(medicineData);
@@ -282,7 +284,7 @@
       } else {
         formTitle.textContent = 'Add New Medicine';
         saveButton.textContent = 'Save Medicine';
-        // default: quick set morning preset
+        // default: quick set morning preset (commented out to match original behavior)
         // doseTimeSelect.value = '08:00';
         // scheduleTimeInput.value = '08:00';
       }
@@ -772,7 +774,7 @@
       const loadingEl = document.getElementById('summary-loading');
       const summaryButton = document.getElementById('summary-button');
       summaryButton.disabled = true;
-      loadingEl.classList.remove('hidden');
+      if (loadingEl) loadingEl.classList.remove('hidden');
 
       try {
         // compact single-line per med
@@ -815,70 +817,76 @@
         console.error("Summary generation failed:", err);
         showModal("Error", `Failed to generate summary. ${escapeHtml(err.message || '')}`);
       } finally {
-        loadingEl.classList.add('hidden');
+        if (loadingEl) loadingEl.classList.add('hidden');
         summaryButton.disabled = false;
       }
     };
 
     // copy last generated summary
+    window.copySummary = function(){
+      if (!lastGeneratedSummaryText) {
+        showModal("Nothing to Copy", "Please generate the health summary first.");
+        return;
+      }
+      copyToClipboard(lastGeneratedSummaryText, "Medication summary copied to clipboard.");
+    };
+
     // Preview Doctor-style PDF before download
-window.downloadSummary = function(){
-  if (!lastGeneratedSummaryText) {
-    showModal("Nothing to Preview", "Please generate the health summary first.");
-    return;
-  }
+    window.downloadSummary = function(){
+      if (!lastGeneratedSummaryText) {
+        showModal("Nothing to Preview", "Please generate the health summary first.");
+        return;
+      }
 
-  try {
-    if (!window.jspdf) {
-      showModal("PDF Library Missing", "Please ensure jsPDF is loaded.");
-      return;
-    }
+      try {
+        if (!window.jspdf) {
+          showModal("PDF Library Missing", "Please ensure jsPDF is loaded.");
+          return;
+        }
 
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
 
-    const username = currentUserProfile?.username || "Patient";
-    const today = new Date().toISOString().split("T")[0];
+        const username = currentUserProfile?.username || "Patient";
+        const today = new Date().toISOString().split("T")[0];
 
-    // Header
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(18);
-    doc.text("MedLink — Doctor Prescription", 105, 20, { align: "center" });
+        // Header
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(18);
+        doc.text("MedLink — Doctor Prescription", 105, 20, { align: "center" });
 
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "normal");
-    doc.text(`Patient: ${username}`, 14, 30);
-    doc.text(`Date: ${today}`, 150, 30);
-    doc.setDrawColor(180);
-    doc.line(14, 34, 196, 34);
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "normal");
+        doc.text(`Patient: ${username}`, 14, 30);
+        doc.text(`Date: ${today}`, 150, 30);
+        doc.setDrawColor(180);
+        doc.line(14, 34, 196, 34);
 
-    // Prescription content
-    doc.setFont("courier", "normal");
-    doc.setFontSize(11);
-    const splitText = doc.splitTextToSize(lastGeneratedSummaryText, 180);
-    doc.text(splitText, 14, 45);
+        // Prescription content
+        doc.setFont("courier", "normal");
+        doc.setFontSize(11);
+        const splitText = doc.splitTextToSize(lastGeneratedSummaryText, 180);
+        doc.text(splitText, 14, 45);
 
-    // Footer with signature
-    doc.setFont("helvetica", "italic");
-    doc.setFontSize(11);
-    doc.text("Doctor's Signature: ____________________________", 14, 270);
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text("Generated by MedLink — Smart Medicine Tracker", 105, 285, { align: "center" });
+        // Footer with signature
+        doc.setFont("helvetica", "italic");
+        doc.setFontSize(11);
+        doc.text("Doctor's Signature: ____________________________", 14, 270);
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.text("Generated by MedLink — Smart Medicine Tracker", 105, 285, { align: "center" });
 
-    // Open preview in new tab
-    const pdfBlob = doc.output("blob");
-    const pdfUrl = URL.createObjectURL(pdfBlob);
-    window.open(pdfUrl, "_blank");
+        // Open preview in new tab
+        const pdfBlob = doc.output("blob");
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+        window.open(pdfUrl, "_blank");
 
-    showModal("🩺 PDF Preview Opened", "Your prescription has been generated. You can review and download it from the new tab.");
-  } catch (err) {
-    console.error("PDF generation failed:", err);
-    showModal("Error", "Unable to generate PDF. Please try again.");
-  }
-};
-
-
+        showModal("🩺 PDF Preview Opened", "Your prescription has been generated. You can review and download it from the new tab.");
+      } catch (err) {
+        console.error("PDF generation failed:", err);
+        showModal("Error", "Unable to generate PDF. Please try again.");
+      }
+    };
 
     // INIT
     const initializeApp = () => {
@@ -906,22 +914,26 @@ window.downloadSummary = function(){
       } else { showMainView('auth-view'); isSignInMode = false; toggleAuthMode(); }
 
       // wire event listeners
-      doseTimeSelect.addEventListener('change', (e) => {
-        const val = e.target.value;
-        if (val === 'custom') {
-          scheduleTimeInput.disabled = false;
-          scheduleTimeInput.value = '';
-          setTimeout(()=>scheduleTimeInput.focus(), 120);
-        } else {
-          scheduleTimeInput.disabled = true;
-          scheduleTimeInput.value = val; // preset HH:MM from select
-        }
-      });
+      if (doseTimeSelect) {
+        doseTimeSelect.addEventListener('change', (e) => {
+          const val = e.target.value;
+          if (val === 'custom') {
+            scheduleTimeInput.disabled = false;
+            scheduleTimeInput.value = '';
+            setTimeout(()=>scheduleTimeInput.focus(), 120);
+          } else {
+            scheduleTimeInput.disabled = true;
+            scheduleTimeInput.value = val; // preset HH:MM from select
+          }
+        });
+      }
 
-      scheduleTypeSelect.addEventListener('change', (e) => {
-        // focus schedule time for convenience
-        setTimeout(()=>scheduleTimeInput.focus(), 120);
-      });
+      if (scheduleTypeSelect) {
+        scheduleTypeSelect.addEventListener('change', (e) => {
+          // focus schedule time for convenience
+          setTimeout(()=>scheduleTimeInput.focus(), 120);
+        });
+      }
 
       document.querySelectorAll('input[name="notification-type"]').forEach(r=>{
         r.addEventListener('change', handleNotificationPreferenceChange);
@@ -932,17 +944,28 @@ window.downloadSummary = function(){
       setInterval(checkReminders, 60000); // every minute
     };
 
-    window.onload = initializeApp;
+    // Start instantly without a loading screen
+    document.addEventListener("DOMContentLoaded", () => {
+      initializeApp();
+
+      // Instantly show proper screen (in case initializeApp didn't update)
+      const sessionData = localStorage.getItem(LOCAL_STORAGE_KEY_SESSION);
+      if (sessionData) {
+        document.getElementById("app-view").classList.remove("hidden");
+      } else {
+        document.getElementById("auth-view").classList.remove("hidden");
+      }
+    });
 
     // watch for storage changes (multi-tab)
     window.addEventListener('storage', () => { loadMedicines(); renderDashboard(); renderSummaryCards(); });
 
-// --- Responsive Menu Toggle ---
-const menuBtn = document.getElementById("menu-btn");
-const mobileMenu = document.getElementById("mobileMenu");
+    // --- Responsive Menu Toggle ---
+    const menuBtn = document.getElementById("menu-btn");
+    const mobileMenu = document.getElementById("mobileMenu");
 
-function toggleMenu() {
-  mobileMenu.classList.toggle("show");
-}
-menuBtn.addEventListener("click", toggleMenu);
-
+    function toggleMenu() {
+      if (!mobileMenu) return;
+      mobileMenu.classList.toggle("show");
+    }
+    if (menuBtn) menuBtn.addEventListener("click", toggleMenu);

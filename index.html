@@ -9,7 +9,6 @@
   <script src="https://cdn.tailwindcss.com" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-
   <style>
     :root {
       --clinical-blue: #2563eb;
@@ -64,8 +63,6 @@
 
     .header { backdrop-filter: blur(6px); }
 
-    #loading-view .spinner { border: 4px solid #e5e7eb; border-top-color: var(--clinical-blue); border-radius: 50%; width:48px; height:48px; }
-
     .summary-list { display:flex; flex-direction:column; gap:0.5rem; max-height:170px; overflow-y:auto; padding-right:0.25rem; scrollbar-width:thin; }
     .summary-list::-webkit-scrollbar { width:6px; }
     .summary-list::-webkit-scrollbar-thumb { background-color: rgba(37,99,235,0.25); border-radius:10px; }
@@ -99,30 +96,22 @@
 
     /* modal content */
     .modal-content { max-width:720px; width:100%; border-radius:12px; }
-/* Navbar responsiveness */
-#mobileMenu {
-  display: none;
-}
-@media (max-width: 768px) {
-  #mobileMenu.show {
-    display: flex;
-    position: absolute;
-    top: 70px;
-    right: 1rem;
-  }
-}
+    /* Navbar responsiveness */
+    #mobileMenu {
+      display: none;
+    }
+    @media (max-width: 768px) {
+      #mobileMenu.show {
+        display: flex;
+        position: absolute;
+        top: 70px;
+        right: 1rem;
+      }
+    }
 
   </style>
 </head>
 <body class="min-h-screen">
-
-  <!-- Loading -->
-  <div id="loading-view" class="min-h-screen flex items-center justify-center p-6">
-    <div class="flex flex-col items-center gap-4">
-      <div class="spinner animate-spin"></div>
-      <p class="muted">Starting MedLink...</p>
-    </div>
-  </div>
 
   <!-- AUTH VIEW -->
   <div id="auth-view" class="min-h-screen flex items-center justify-center p-6 hidden">
@@ -169,38 +158,36 @@
 
   <!-- APP VIEW -->
   <div id="app-view" class="hidden min-h-screen flex flex-col">
-    <!-- Header -->
-<!-- Header / Navigation Bar -->
-<header class="card mx-4 my-2">
-  <div class="flex items-center justify-between p-4">
-    <div class="flex items-center gap-3">
-      <span class="text-2xl">💊</span>
-      <h1 class="font-extrabold text-lg" style="color:var(--clinical-blue)">MedLink</h1>
-    </div>
+    <!-- Header / Navigation Bar -->
+    <header class="card mx-4 my-2">
+      <div class="flex items-center justify-between p-4">
+        <div class="flex items-center gap-3">
+          <span class="text-2xl">💊</span>
+          <h1 class="font-extrabold text-lg" style="color:var(--clinical-blue)">MedLink</h1>
+        </div>
 
-    <!-- Desktop Navbar -->
-    <nav class="hidden md:flex items-center gap-4">
-      <button onclick="scrollToSection('dashboard-view')">📋 Dashboard</button>
-      <button onclick="scrollToSection('add-medicine-view')">＋ Add</button>
-      <button onclick="scrollToSection('settings-view')">⚙ Settings</button>
-      <button id="darkModeToggle" onclick="toggleDarkMode()">🌙</button>
-      <button onclick="signOut()" style="color:red;">🚪 Sign Out</button>
-    </nav>
+        <!-- Desktop Navbar -->
+        <nav class="hidden md:flex items-center gap-4">
+          <button onclick="scrollToSection('dashboard-view')">📋 Dashboard</button>
+          <button onclick="scrollToSection('add-medicine-view')">＋ Add</button>
+          <button onclick="scrollToSection('settings-view')">⚙ Settings</button>
+          <button id="darkModeToggle" onclick="toggleDarkMode()">🌙</button>
+          <button onclick="signOut()" style="color:red;">🚪 Sign Out</button>
+        </nav>
 
-    <!-- Hamburger Menu (visible only on mobile) -->
-    <button id="menu-btn" class="md:hidden text-2xl" style="color:var(--clinical-blue); background:none; border:none;">☰</button>
-  </div>
+        <!-- Hamburger Menu (visible only on mobile) -->
+        <button id="menu-btn" class="md:hidden text-2xl" style="color:var(--clinical-blue); background:none; border:none;">☰</button>
+      </div>
 
-  <!-- Mobile Dropdown Menu -->
-  <div id="mobileMenu" class="hidden flex-col absolute right-4 mt-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 w-48 z-50">
-    <button onclick="scrollToSection('dashboard-view'); toggleMenu()" class="text-left py-1 px-2 w-full hover:bg-blue-50 dark:hover:bg-gray-800 rounded">📋 Dashboard</button>
-    <button onclick="scrollToSection('add-medicine-view'); toggleMenu()" class="text-left py-1 px-2 w-full hover:bg-blue-50 dark:hover:bg-gray-800 rounded">＋ Add</button>
-    <button onclick="scrollToSection('settings-view'); toggleMenu()" class="text-left py-1 px-2 w-full hover:bg-blue-50 dark:hover:bg-gray-800 rounded">⚙ Settings</button>
-    <button onclick="toggleDarkMode(); toggleMenu()" class="text-left py-1 px-2 w-full hover:bg-blue-50 dark:hover:bg-gray-800 rounded">🌙 Dark Mode</button>
-    <button onclick="signOut(); toggleMenu()" class="text-left py-1 px-2 w-full text-red-600 hover:bg-red-50 dark:hover:bg-gray-800 rounded">🚪 Sign Out</button>
-  </div>
-</header>
-
+      <!-- Mobile Dropdown Menu -->
+      <div id="mobileMenu" class="hidden flex-col absolute right-4 mt-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 w-48 z-50">
+        <button onclick="scrollToSection('dashboard-view'); toggleMenu()" class="text-left py-1 px-2 w-full hover:bg-blue-50 dark:hover:bg-gray-800 rounded">📋 Dashboard</button>
+        <button onclick="scrollToSection('add-medicine-view'); toggleMenu()" class="text-left py-1 px-2 w-full hover:bg-blue-50 dark:hover:bg-gray-800 rounded">＋ Add</button>
+        <button onclick="scrollToSection('settings-view'); toggleMenu()" class="text-left py-1 px-2 w-full hover:bg-blue-50 dark:hover:bg-gray-800 rounded">⚙ Settings</button>
+        <button onclick="toggleDarkMode(); toggleMenu()" class="text-left py-1 px-2 w-full hover:bg-blue-50 dark:hover:bg-gray-800 rounded">🌙 Dark Mode</button>
+        <button onclick="signOut(); toggleMenu()" class="text-left py-1 px-2 w-full text-red-600 hover:bg-red-50 dark:hover:bg-gray-800 rounded">🚪 Sign Out</button>
+      </div>
+    </header>
 
     <main id="main-content" class="flex-1 max-w-7xl mx-auto p-6">
       <!-- Dashboard -->
@@ -349,7 +336,6 @@
               <div class="md:col-span-2">
                 <div class="flex items-center justify-between mb-1">
                   <label class="text-xs font-medium muted">Purpose / Notes</label>
-                  <!-- GET DETAILS BUTTON REMOVED AS REQUESTED -->
                 </div>
                 <textarea id="purpose" rows="2" class="input-field form-input w-full mt-1 p-3" placeholder="e.g., For headache relief, take after food."></textarea>
                 <p id="purpose-loading" class="text-xs" style="color:var(--clinical-blue); margin-top:.25rem; display:none;">Loading common use and warnings...</p>
@@ -433,16 +419,14 @@
 
   <!-- Audio: short ping + loud looping alarm -->
   <audio id="notification-sound" preload="auto">
-    <!-- tiny ping wav (very short) -->
     <source src="https://audio-previews.elements.envatousercontent.com/files/472198703/preview.mp3" type="audio/mpeg">
   </audio>
 
-  <!-- Using envato preview (replace with local file if you prefer) -->
   <audio id="alarm-sound" preload="auto" loop>
     <source src="https://audio-previews.elements.envatousercontent.com/files/228185949/preview.mp3" type="audio/mpeg">
   </audio>
 
   <!-- SCRIPT -->
-  <script src='script.js'></script>
+  <script src="script.js"></script>
 </body>
 </html>
