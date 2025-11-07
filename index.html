@@ -11,11 +11,6 @@
    <link rel="manifest" href="manifest.json">
 
 
-
-  <!-- Tailwind CDN -->
-  <script src="https://cdn.tailwindcss.com" defer></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
   <style>
     :root {
       --clinical-blue: #2563eb;
@@ -433,9 +428,12 @@
     <source src="https://audio-previews.elements.envatousercontent.com/files/228185949/preview.mp3" type="audio/mpeg">
   </audio>
 
-  <!-- SCRIPT -->
-  <script src="script.js"></script>
-  <script>
+<!-- ✅ 1️⃣ Load Firebase SDKs first -->
+<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-messaging.js"></script>
+
+<!-- ✅ 2️⃣ Then include your Firebase config and logic -->
+<script>
   // --- Firebase configuration for MedLink Notifications ---
   const firebaseConfig = {
     apiKey: "AIzaSyBdlLwkadXDKE3k5WVxW6Ku2UkhlNnZLwo",
@@ -447,42 +445,40 @@
     measurementId: "G-QJD6XMY0VJ"
   };
 
-  // --- Initialize Firebase (Firebase SDKs must be loaded before this script) ---
+  // Initialize Firebase (now firebase is defined)
   firebase.initializeApp(firebaseConfig);
 
-  // --- Initialize Cloud Messaging ---
+  // Initialize Messaging
   const messaging = firebase.messaging();
 
-  // --- Function to request notification permission and get FCM token ---
+  // Request Notification Permission
   async function initFirebaseMessaging() {
     try {
       const permission = await Notification.requestPermission();
       if (permission === "granted") {
         const token = await messaging.getToken({
-          vapidKey: "YOUR_VAPID_KEY_HERE" // 🔹 Add your Web Push certificate key here
+          vapidKey: "YOUR_VAPID_KEY_HERE"
         });
         console.log("✅ FCM Token:", token);
-        alert("Your FCM Token has been generated! Check the console for it.");
       } else {
         console.warn("🚫 Notification permission denied");
       }
     } catch (err) {
-      console.error("❌ Error initializing Firebase Messaging:", err);
+      console.error("Error initializing Firebase Messaging:", err);
     }
   }
 
-  // --- Service Worker registration and FCM initialization ---
+  // Register Service Worker
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker
-      .register("sw.js")
-      .then((registration) => {
-        console.log("✅ Service Worker registered for Firebase Messaging:", registration.scope);
+    navigator.serviceWorker.register("sw.js")
+      .then((reg) => {
+        console.log("✅ Service Worker registered");
         initFirebaseMessaging();
       })
-      .catch((err) => console.error("❌ Service Worker registration failed:", err));
+      .catch((err) => console.error("❌ SW registration failed:", err));
   }
 
-  // --- Handle foreground messages (when app is open) ---
+  // Handle foreground messages
   messaging.onMessage((payload) => {
     console.log("📩 Foreground message received:", payload);
     const { title, body } = payload.notification;
@@ -492,7 +488,12 @@
     });
   });
 </script>
+<script src="https://cdn.tailwindcss.com" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="script.js" defer></script>
+
 
 </body>
 </html>
+
 
