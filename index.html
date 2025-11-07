@@ -433,6 +433,11 @@
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-messaging.js"></script>
 
 <!-- ✅ 2️⃣ Then include your Firebase config and logic -->
+<!-- ✅ 1️⃣ Load Firebase SDKs (Compat versions, safe for inline scripts) -->
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-messaging-compat.js"></script>
+
+<!-- ✅ 2️⃣ Your Firebase config and initialization -->
 <script>
   // --- Firebase configuration for MedLink Notifications ---
   const firebaseConfig = {
@@ -445,13 +450,13 @@
     measurementId: "G-QJD6XMY0VJ"
   };
 
-  // Initialize Firebase (now firebase is defined)
+  // ✅ Initialize Firebase (works with compat)
   firebase.initializeApp(firebaseConfig);
 
-  // Initialize Messaging
+  // ✅ Initialize Messaging
   const messaging = firebase.messaging();
 
-  // Request Notification Permission
+  // ✅ Request Notification Permission
   async function initFirebaseMessaging() {
     try {
       const permission = await Notification.requestPermission();
@@ -468,7 +473,7 @@
     }
   }
 
-  // Register Service Worker
+  // ✅ Register Service Worker
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("sw.js")
       .then((reg) => {
@@ -478,7 +483,7 @@
       .catch((err) => console.error("❌ SW registration failed:", err));
   }
 
-  // Handle foreground messages
+  // ✅ Handle foreground messages
   messaging.onMessage((payload) => {
     console.log("📩 Foreground message received:", payload);
     const { title, body } = payload.notification;
@@ -488,12 +493,16 @@
     });
   });
 </script>
+
+<!-- ✅ 3️⃣ Then your existing scripts -->
 <script src="https://cdn.tailwindcss.com" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="script.js" defer></script>
 
 
+
 </body>
 </html>
+
 
 
