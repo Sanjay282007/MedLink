@@ -437,6 +437,20 @@
     });
   });
 </script>
+  <script>
+  // Fake manifest injection for browsers that expect gcm_sender_id
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/OneSignalSDKWorker.js', { scope: '/' });
+  }
+
+  // Let OneSignal know the sender id manually (avoids manifest.json)
+  window.OneSignal = window.OneSignal || [];
+  window.OneSignal.push(function() {
+    window.OneSignal.SERVICE_WORKER_PARAM = { gcm_sender_id: "482941778795" };
+  });
+</script>
+
 </body>
 </html>
+
 
