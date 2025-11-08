@@ -428,21 +428,15 @@
   <!-- SCRIPT -->
   <script src="script.js"></script>
 
-  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+ <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   OneSignalDeferred.push(async function(OneSignal) {
     await OneSignal.init({
-      appId: "ef71ae37-064e-41de-aac6-bd3de6b15596", // ✅ your real App ID
-      notifyButton: {
-        enable: true,
-      },
-      welcomeNotification: {
-        title: "MedLink — Notifications Enabled 💊",
-        message: "You’ll now receive dose reminders even when the app is closed.",
-      },
+      appId: "1f8b33dd-afd2-4bb3-ac96-029149a4c71e",
     });
   });
 </script>
 </body>
 </html>
+
