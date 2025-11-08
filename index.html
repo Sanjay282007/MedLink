@@ -427,8 +427,19 @@
   </audio>
   <!-- SCRIPT -->
   <script src="script.js"></script>
+
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: "60363364-fbfe-48fc-95f8-ab5bd6c4b6dc",
+    });
+  });
+</script>
 </body>
 </html>
+
 
 
 
