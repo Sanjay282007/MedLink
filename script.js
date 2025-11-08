@@ -689,47 +689,28 @@
       } catch(e){}
     }
 
-    const showWebNotification = async (med) => {
-  if (activeReminder) return;
-  activeReminder = med;
-
-  const title = `💊 MedLink Reminder`;
-  const body = `It's time to take ${med.name} (${med.dosage}) — ${med.doseAmount} unit${med.doseAmount > 1 ? 's' : ''}.`;
-
-  try {
-    const OneSignalObj = window.OneSignal || window.OneSignalDeferred;
-    if (!OneSignalObj) {
-      console.warn("OneSignal SDK not loaded yet.");
-      return;
-    }
-
-    await OneSignalObj.Notifications.showNotification({
-      title,
-      body,
-      icon: "logo.png",
-      requireInteraction: true, // stays until clicked
-    });
-
-    console.log(`✅ OneSignal reminder sent for ${med.name}`);
-  } catch (err) {
-    console.error("❌ OneSignal notification error:", err);
-  }
-
-  // play local sounds for added feedback
-  try {
-    notificationSound.currentTime = 0;
-    notificationSound.play().catch(() => {});
-  } catch (e) {}
-  try {
-    alarmSound.loop = true;
-    alarmSound.volume = 1.0;
-    alarmSound.currentTime = 0;
-    alarmSound.play().catch(() => {});
-  } catch (e) {}
-
-  // auto-stop reminder after 20 seconds
-  setTimeout(window.closeReminder, 20000);
-};
+    const showWebNotification = (med) => {
+      if (notificationPermission !== 'granted' || activeReminder) return;
+      activeReminder = med;
+      const title = `💊 MedLink: ${med.time} Dose Reminder`;
+      const body = `Time to take ${med.name}. Dose: ${med.dosage} (${med.doseAmount}). Stock remaining: ${med.stock}.`;
+      try {
+        const notification = new Notification(title, { body, icon: 'https://placehold.co/48x48/10b981/ffffff?text=P', vibrate: [200,100,200] });
+        notification.onclick = function(){ window.focus(); window.closeReminder(); };
+      } catch(e){}
+      // play ping + alarm as well
+      try {
+        notificationSound.currentTime = 0;
+        notificationSound.play().catch(()=>{});
+      } catch(e){}
+      try {
+        alarmSound.loop = true;
+        alarmSound.volume = 1.0;
+        alarmSound.currentTime = 0;
+        alarmSound.play().catch(()=>{});
+      } catch(e){}
+      setTimeout(window.closeReminder, 20000);
+    };
 
     window.closeReminder = () => {
       if (activeReminder) activeReminder.snoozeUntil = null;
@@ -988,4 +969,3 @@
       mobileMenu.classList.toggle("show");
     }
     if (menuBtn) menuBtn.addEventListener("click", toggleMenu);
-
