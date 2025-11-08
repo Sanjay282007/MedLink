@@ -444,10 +444,51 @@
     });
   });
 </script>
+
+  <script>
+async function scheduleMedicineReminder(medicineName, time) {
+  try {
+    // 1️⃣ Wait for OneSignal to be ready and get the player ID
+    const playerId = await new Promise((resolve, reject) => {
+      OneSignalDeferred.push(async function(OneSignal) {
+        const id = await OneSignal.User?.getExternalId?.() || await OneSignal.getUserId();
+        resolve(id);
+      });
+    });
+
+    console.log("🆔 OneSignal Player ID:", playerId);
+
+    if (!playerId) {
+      alert("Notification setup not complete. Please allow notifications.");
+      return;
+    }
+
+    // 2️⃣ Send data to Pipedream webhook
+    const response = await fetch("https://eo5s86op0ofrfku.m.pipedream.net/", { // 🔗 Replace with your Pipedream webhook URL
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        playerId: playerId,
+        medicineName: medicineName,
+        time: time, // e.g., "08:00"
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      }),
+    });
+
+    const result = await response.json();
+    console.log("✅ Scheduled:", result);
+    alert(`Reminder for ${medicineName} scheduled at ${time}`);
+  } catch (err) {
+    console.error("❌ Failed to schedule notification:", err);
+  }
+}
+</script>
+
   
 
 </body>
 </html>
+
 
 
 
