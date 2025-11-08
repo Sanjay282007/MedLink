@@ -428,32 +428,26 @@
   <!-- SCRIPT -->
   <script src="script.js"></script>
 
-    <script>
-  // Fake manifest injection for browsers that expect gcm_sender_id
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/OneSignalSDKWorker.js', { scope: '/' });
-  }
-
-  // Let OneSignal know the sender id manually (avoids manifest.json)
-  window.OneSignal = window.OneSignal || [];
-  window.OneSignal.push(function() {
-    window.OneSignal.SERVICE_WORKER_PARAM = { gcm_sender_id: "482941778795" };
-  });
-</script>
-
- <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+   <!-- ✅ OneSignal Push Notifications (v16 clean setup) -->
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>
   window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(async function(OneSignal) {
+  OneSignalDeferred.push(async function (OneSignal) {
     await OneSignal.init({
       appId: "1f8b33dd-afd2-4bb3-ac96-029149a4c71e",
+      notifyButton: {
+        enable: true, // shows the little notification bell
+      },
+      allowLocalhostAsSecureOrigin: true // helps with local testing
     });
   });
 </script>
 
 
+
 </body>
 </html>
+
 
 
 
