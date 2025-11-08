@@ -226,6 +226,8 @@
       if (!currentUserId) return;
       const key = APP_STORAGE_KEY_PREFIX + currentUserId;
       localStorage.setItem(key, JSON.stringify(medicines));
+      scheduleMedicineReminder(medicine.name, medicine.time);
+
     };
 
     // Prepare add/edit form
@@ -969,3 +971,4 @@
       mobileMenu.classList.toggle("show");
     }
     if (menuBtn) menuBtn.addEventListener("click", toggleMenu);
+
