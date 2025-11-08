@@ -428,16 +428,7 @@
   <!-- SCRIPT -->
   <script src="script.js"></script>
 
- <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script>
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.init({
-      appId: "1f8b33dd-afd2-4bb3-ac96-029149a4c71e",
-    });
-  });
-</script>
-  <script>
+    <script>
   // Fake manifest injection for browsers that expect gcm_sender_id
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/OneSignalSDKWorker.js', { scope: '/' });
@@ -450,7 +441,19 @@
   });
 </script>
 
+ <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: "1f8b33dd-afd2-4bb3-ac96-029149a4c71e",
+    });
+  });
+</script>
+
+
 </body>
 </html>
+
 
 
