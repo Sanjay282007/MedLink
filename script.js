@@ -405,6 +405,7 @@
         saveMedicines();
         renderDashboard();
         renderSummaryCards();
+        scheduleMedicineReminder(name, scheduleTime);
         stopAlarm();
         showModal("Dose Taken", `${escapeHtml(medicine.name)} — dose recorded. Stock left: ${medicine.stock}`);
       } else if (medicine.stock > 0) {
@@ -971,4 +972,5 @@
       mobileMenu.classList.toggle("show");
     }
     if (menuBtn) menuBtn.addEventListener("click", toggleMenu);
+
 
