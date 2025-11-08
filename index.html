@@ -445,8 +445,69 @@
   });
 </script>
 
+
+  <script>
+/* ==========================================================
+   🩺 MedLink — Local Medicine Reminder Scheduler (OneSignal)
+   ========================================================== */
+
+function scheduleMedicineNotifications() {
+  console.log("🕗 MedLink reminder scheduler started");
+
+  // Runs every 60 seconds
+  setInterval(() => {
+    const now = new Date();
+    const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+    // Load all saved medicines
+    const medicines = JSON.parse(localStorage.getItem("medicines") || "[]");
+
+    medicines.forEach((med) => {
+      // Skip if no time set
+      if (!med.doseTime) return;
+
+      // Example: doseTime = "08:00" or "13:00"
+      if (med.doseTime === currentTime) {
+        // Only once per minute per medicine
+        const today = new Date().toDateString();
+        const lastNotifiedKey = `notified_${med.name}_${today}`;
+
+        if (!localStorage.getItem(lastNotifiedKey)) {
+          showMedicineNotification(med);
+          localStorage.setItem(lastNotifiedKey, "true");
+        }
+      }
+    });
+  }, 60000); // every minute
+}
+
+/* 🔔 Display a notification using OneSignal */
+async function showMedicineNotification(medicine) {
+  try {
+    const OneSignalObj = window.OneSignal || window.OneSignalDeferred;
+    if (!OneSignalObj) return;
+
+    await OneSignalObj.Notifications.showNotification({
+      title: "💊 Medicine Reminder",
+      body: `It's time to take ${medicine.name} (${medicine.dosage || ''})`,
+      icon: "logo.png",
+      requireInteraction: true, // stays until clicked
+    });
+
+    console.log(`✅ Notification shown for ${medicine.name}`);
+  } catch (err) {
+    console.error("❌ OneSignal notification error:", err);
+  }
+}
+
+/* 🧠 Initialize scheduler after app loads */
+window.addEventListener("load", scheduleMedicineNotifications);
+</script>
+
+
 </body>
 </html>
+
 
 
 
