@@ -85,6 +85,45 @@
       const registrationFields = document.getElementById('registration-fields');
       const usernameInput = document.getElementById('username');
 
+        // --- Schedule Medicine Reminder using OneSignal + Pipedream ---
+async function scheduleMedicineReminder(medicineName, time) {
+  try {
+    // Wait 2s to ensure OneSignal SDK is initialized
+    await new Promise(r => setTimeout(r, 2000));
+
+    // Get the OneSignal player ID
+    const playerId = await new Promise((resolve) => {
+      OneSignalDeferred.push(async function(OneSignal) {
+        const id = await OneSignal.getUserId();
+        resolve(id);
+      });
+    });
+
+    if (!playerId) {
+      console.warn("⚠ No OneSignal player ID available. User may not have subscribed.");
+      return;
+    }
+
+    // Send medicine data to Pipedream
+    const response = await fetch("https://eo5s86op0ofrfku.m.pipedream.net", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        playerId,
+        medicineName,
+        time,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      }),
+    });
+
+    const result = await response.json();
+    console.log("✅ Reminder scheduled:", result);
+  } catch (err) {
+    console.error("❌ Failed to schedule reminder:", err);
+  }
+}
+
+
       if (isSignInMode) {
         authTitle.textContent = 'Sign In';
         submitButton.textContent = 'Sign In';
@@ -972,5 +1011,6 @@
       mobileMenu.classList.toggle("show");
     }
     if (menuBtn) menuBtn.addEventListener("click", toggleMenu);
+
 
 
