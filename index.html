@@ -429,42 +429,26 @@
     <!-- SCRIPT -->
   <script src="script.js"></script>
 
-  <!-- OneSignal Web Push Setup -->
-  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"></script>
-  <script>
-    window.OneSignalDeferred = window.OneSignalDeferred || [];
-    OneSignalDeferred.push(async function(OneSignal) {
-      await OneSignal.init({
-        appId: "60363364-fbfe-48fc-95f8-ab5bd6c4b6dc", // ✅ Your real App ID
-        notifyButton: {
-          enable: true,
-          size: 'medium',
-          theme: 'default',
-          position: 'bottom-right',
-          text: {
-            'tip.state.unsubscribed': 'Subscribe to notifications',
-            'tip.state.subscribed': "You're subscribed!",
-            'tip.state.blocked': "You've blocked notifications",
-            'message.prenotify': 'Click to subscribe for updates',
-            'message.action.subscribed': "Thanks for subscribing!",
-            'message.action.resubscribed': "You're subscribed again!",
-            'message.action.unsubscribed': "You won't receive alerts anymore",
-            'dialog.main.title': 'Manage Notifications',
-            'dialog.main.button.subscribe': 'Subscribe',
-            'dialog.main.button.unsubscribe': 'Unsubscribe',
-          },
-        },
-        welcomeNotification: {
-          title: "MedLink — Notifications Enabled 💊",
-          message: "You’ll now receive dose reminders even when the app is closed.",
-        },
-      });
-
-      console.log("✅ OneSignal initialized successfully");
-      console.log("🔔 Permission:", await OneSignal.Notifications.permission);
+<!-- ✅ OneSignal Push Notifications -->
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: "60363364-fbfe-48fc-95f8-ab5bd6c4b6dc", // ✅ your real App ID
+      notifyButton: {
+        enable: true,
+      },
+      welcomeNotification: {
+        title: "MedLink — Notifications Enabled 💊",
+        message: "You’ll now receive dose reminders even when the app is closed.",
+      },
     });
-  </script>
+  });
+</script>
+
 </body>
 </html>
+
 
 
